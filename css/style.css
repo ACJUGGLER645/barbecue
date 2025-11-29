@@ -1,24 +1,26 @@
 /* Global Styles & Variables */
 :root {
-    --bg-color: #fff5f2;
-    --text-color: #333;
+    --bg-color: #fff8f0;
+    --text-color: #2d3436;
     --glass-bg: rgba(255, 255, 255, 0.25);
     --glass-border: rgba(255, 255, 255, 0.3);
-    --glass-shadow: 0 8px 32px 0 rgba(135, 31, 31, 0.15);
-    --primary-color: #ff4757;
-    --secondary-color: #ffa502;
+    --glass-shadow: 0 8px 32px 0 rgba(255, 69, 0, 0.2);
+    --primary-color: #ff4500;
+    /* Orange Red */
+    --secondary-color: #ffcc00;
+    /* Vivid Yellow */
     --nav-bg: rgba(255, 255, 255, 0.7);
     --card-bg: rgba(255, 255, 255, 0.4);
 }
 
 body.dark-mode {
-    --bg-color: #1a0f0f;
-    --text-color: #e0e0e0;
+    --bg-color: #1a0a0a;
+    --text-color: #f1f2f6;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --nav-bg: rgba(26, 15, 15, 0.7);
-    --card-bg: rgba(40, 20, 20, 0.4);
+    --nav-bg: rgba(26, 10, 10, 0.7);
+    --card-bg: rgba(40, 10, 10, 0.4);
 }
 
 * {
@@ -33,9 +35,12 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     background-image:
-        radial-gradient(at 0% 0%, hsla(15, 60%, 20%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(30, 70%, 30%, 1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(350, 60%, 30%, 1) 0, transparent 50%);
+        radial-gradient(at 0% 0%, hsla(30, 100%, 50%, 1) 0, transparent 50%),
+        /* Orange */
+        radial-gradient(at 100% 0%, hsla(0, 100%, 50%, 1) 0, transparent 50%),
+        /* Red */
+        radial-gradient(at 50% 100%, hsla(45, 100%, 50%, 1) 0, transparent 50%);
+    /* Yellow */
     background-attachment: fixed;
     min-height: 100vh;
     overflow-x: hidden;
@@ -43,9 +48,9 @@ body {
 
 body.dark-mode {
     background-image:
-        radial-gradient(at 0% 0%, hsla(15, 60%, 10%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(30, 70%, 15%, 1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(350, 60%, 15%, 1) 0, transparent 50%);
+        radial-gradient(at 0% 0%, hsla(10, 80%, 15%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(0, 70%, 10%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 100%, hsla(20, 80%, 15%, 1) 0, transparent 50%);
 }
 
 /* Glassmorphism Utilities */
