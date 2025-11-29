@@ -682,4 +682,102 @@ body.dark-mode {
     font-size: 2rem;
     opacity: 0.1;
     color: var(--text-color);
+}/* Techno Event Style */
+.event-techno {
+    background: linear-gradient(135deg, #000000, #1a0b2e);
+    border: 1px solid rgba(255, 0, 255, 0.5);
+    box-shadow: 0 0 15px rgba(255, 0, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.2);
+    position: relative;
+    overflow: hidden;
+    color: #fff;
+}
+
+.event-techno::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: repeating-linear-gradient(transparent,
+            transparent 10px,
+            rgba(255, 0, 255, 0.1) 10px,
+            rgba(255, 0, 255, 0.1) 20px);
+    animation: techno-lights 5s linear infinite;
+    pointer-events: none;
+}
+
+.event-techno h3 {
+    text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+    color: #fff;
+}
+
+.event-techno .event-date {
+    background: rgba(255, 0, 255, 0.2);
+    border: 1px solid #ff00ff;
+}
+
+.event-techno .event-date .day {
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+.event-techno .calendar-btn {
+    background: rgba(0, 255, 255, 0.1);
+    border: 1px solid #00ffff;
+    color: #00ffff;
+    text-shadow: 0 0 5px #00ffff;
+}
+
+.event-techno .calendar-btn:hover {
+    background: #00ffff;
+    color: #000;
+    box-shadow: 0 0 15px #00ffff;
+}
+
+@keyframes techno-lights {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Café Event Style */
+.event-cafe {
+    background: linear-gradient(135deg, #fff8e1, #f5e6ca);
+    /* Creamy/Latte colors */
+    border: 1px solid #d4a373;
+    box-shadow: 0 4px 15px rgba(139, 69, 19, 0.15);
+    color: #5d4037;
+}
+
+.event-cafe h3 {
+    color: #6f4e37;
+    /* Coffee bean color */
+    font-family: 'Georgia', serif;
+    /* More elegant font */
+    font-style: italic;
+}
+
+.event-cafe .event-date {
+    background: rgba(111, 78, 55, 0.1);
+    border: 1px solid #8d6e63;
+}
+
+.event-cafe .event-date .day {
+    color: #6f4e37;
+}
+
+.event-cafe .calendar-btn {
+    background: rgba(111, 78, 55, 0.1);
+    border: 1px solid #8d6e63;
+    color: #5d4037;
+}
+
+.event-cafe .calendar-btn:hover {
+    background: #6f4e37;
+    color: #fff;
 }
