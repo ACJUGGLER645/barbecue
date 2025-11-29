@@ -1,24 +1,24 @@
 /* Global Styles & Variables */
 :root {
-    --bg-color: #f0f2f5;
+    --bg-color: #fff5f2;
     --text-color: #333;
     --glass-bg: rgba(255, 255, 255, 0.25);
     --glass-border: rgba(255, 255, 255, 0.3);
-    --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
-    --primary-color: #ff6b6b;
-    --secondary-color: #4ecdc4;
+    --glass-shadow: 0 8px 32px 0 rgba(135, 31, 31, 0.15);
+    --primary-color: #ff4757;
+    --secondary-color: #ffa502;
     --nav-bg: rgba(255, 255, 255, 0.7);
     --card-bg: rgba(255, 255, 255, 0.4);
 }
 
 body.dark-mode {
-    --bg-color: #121212;
+    --bg-color: #1a0f0f;
     --text-color: #e0e0e0;
     --glass-bg: rgba(255, 255, 255, 0.05);
     --glass-border: rgba(255, 255, 255, 0.1);
     --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-    --nav-bg: rgba(18, 18, 18, 0.7);
-    --card-bg: rgba(30, 30, 30, 0.4);
+    --nav-bg: rgba(26, 15, 15, 0.7);
+    --card-bg: rgba(40, 20, 20, 0.4);
 }
 
 * {
@@ -33,9 +33,9 @@ body {
     background-color: var(--bg-color);
     color: var(--text-color);
     background-image:
-        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225, 39%, 30%, 1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339, 49%, 30%, 1) 0, transparent 50%);
+        radial-gradient(at 0% 0%, hsla(15, 60%, 20%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(30, 70%, 30%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(350, 60%, 30%, 1) 0, transparent 50%);
     background-attachment: fixed;
     min-height: 100vh;
     overflow-x: hidden;
@@ -43,9 +43,9 @@ body {
 
 body.dark-mode {
     background-image:
-        radial-gradient(at 0% 0%, hsla(253, 16%, 7%, 1) 0, transparent 50%),
-        radial-gradient(at 50% 0%, hsla(225, 39%, 20%, 1) 0, transparent 50%),
-        radial-gradient(at 100% 0%, hsla(339, 49%, 20%, 1) 0, transparent 50%);
+        radial-gradient(at 0% 0%, hsla(15, 60%, 10%, 1) 0, transparent 50%),
+        radial-gradient(at 50% 0%, hsla(30, 70%, 15%, 1) 0, transparent 50%),
+        radial-gradient(at 100% 0%, hsla(350, 60%, 15%, 1) 0, transparent 50%);
 }
 
 /* Glassmorphism Utilities */
