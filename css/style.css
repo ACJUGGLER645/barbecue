@@ -682,16 +682,24 @@ body.dark-mode {
     font-size: 2rem;
     opacity: 0.1;
     color: var(--text-color);
-}/* Techno Event Style */
+}
+
+/* Techno Event Style */
+/* Techno Event Style - Intense Stage Lights & Lasers */
 .event-techno {
-    background: linear-gradient(135deg, #000000, #1a0b2e);
+    background: radial-gradient(circle at 50% 0%, #2a0a18, #000000);
     border: 1px solid rgba(255, 0, 255, 0.5);
-    box-shadow: 0 0 15px rgba(255, 0, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.2);
+    box-shadow:
+        0 0 20px rgba(255, 0, 0, 0.3),
+        0 0 40px rgba(0, 0, 255, 0.3),
+        inset 0 0 30px rgba(0, 0, 0, 0.8);
     position: relative;
     overflow: hidden;
     color: #fff;
+    z-index: 1;
 }
 
+/* Stage Spotlights (Beams from top) */
 .event-techno::before {
     content: '';
     position: absolute;
@@ -699,49 +707,111 @@ body.dark-mode {
     left: -50%;
     width: 200%;
     height: 200%;
-    background: repeating-linear-gradient(transparent,
-            transparent 10px,
-            rgba(255, 0, 255, 0.1) 10px,
-            rgba(255, 0, 255, 0.1) 20px);
-    animation: techno-lights 5s linear infinite;
+    background:
+        conic-gradient(from 180deg at 50% 25%,
+            transparent 0deg,
+            rgba(255, 0, 0, 0.6) 10deg,
+            /* Red Beam */
+            transparent 20deg,
+            rgba(0, 80, 255, 0.6) 30deg,
+            /* Blue Beam */
+            transparent 40deg,
+            rgba(255, 0, 0, 0.6) 50deg,
+            /* Red Beam */
+            transparent 60deg,
+            rgba(0, 80, 255, 0.6) 70deg,
+            /* Blue Beam */
+            transparent 80deg);
+    filter: blur(8px);
+    mix-blend-mode: screen;
+    animation: stage-lights-sway 4s ease-in-out infinite alternate;
+    transform-origin: 50% 25%;
     pointer-events: none;
 }
 
+/* Laser Rays (Sharp lines) */
+.event-techno::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background:
+        repeating-linear-gradient(90deg,
+            transparent 0%,
+            transparent 48%,
+            rgba(255, 255, 255, 0.8) 50%,
+            transparent 52%,
+            transparent 100%);
+    background-size: 200% 200%;
+    opacity: 0.3;
+    animation: laser-scan 2s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+}
+
 .event-techno h3 {
-    text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+    text-shadow: 0 0 10px #ff0055, 0 0 20px #ff0055, 0 0 30px #ff0055;
     color: #fff;
+    font-weight: 800;
+    letter-spacing: 1px;
+    position: relative;
+    z-index: 2;
 }
 
 .event-techno .event-date {
-    background: rgba(255, 0, 255, 0.2);
-    border: 1px solid #ff00ff;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid #ff0055;
+    box-shadow: 0 0 15px #ff0055;
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
 }
 
 .event-techno .event-date .day {
-    color: #00ffff;
-    text-shadow: 0 0 5px #00ffff;
+    color: #fff;
+    text-shadow: 0 0 10px #0088ff;
 }
 
 .event-techno .calendar-btn {
-    background: rgba(0, 255, 255, 0.1);
-    border: 1px solid #00ffff;
-    color: #00ffff;
-    text-shadow: 0 0 5px #00ffff;
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid #0088ff;
+    color: #0088ff;
+    text-shadow: 0 0 10px #0088ff;
+    box-shadow: 0 0 10px rgba(0, 136, 255, 0.3);
+    font-weight: 700;
+    position: relative;
+    z-index: 2;
 }
 
 .event-techno .calendar-btn:hover {
-    background: #00ffff;
-    color: #000;
-    box-shadow: 0 0 15px #00ffff;
+    background: #0088ff;
+    color: #fff;
+    box-shadow: 0 0 30px #0088ff;
+    transform: scale(1.05);
 }
 
-@keyframes techno-lights {
+@keyframes stage-lights-sway {
     0% {
-        transform: rotate(0deg);
+        transform: rotate(-15deg);
+        opacity: 0.8;
     }
 
     100% {
-        transform: rotate(360deg);
+        transform: rotate(15deg);
+        opacity: 1;
+    }
+}
+
+@keyframes laser-scan {
+    0% {
+        background-position: -100% 0;
+    }
+
+    100% {
+        background-position: 200% 0;
     }
 }
 
