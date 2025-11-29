@@ -633,4 +633,46 @@ body.dark-mode {
     .hero-content h1 {
         font-size: 2.5rem;
     }
+}/* Quotes Section */
+.quotes-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.quote-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 12px;
+    border-left: 4px solid var(--primary-color);
+    position: relative;
+    font-style: italic;
+    transition: transform 0.3s ease;
+}
+
+.quote-card:hover {
+    transform: translateY(-5px);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.quote-text {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.quote-author {
+    text-align: right;
+    font-weight: 700;
+    color: var(--secondary-color);
+    font-style: normal;
+}
+
+.quote-icon {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    font-size: 2rem;
+    opacity: 0.1;
+    color: var(--text-color);
 }
