@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Dev Barbecue</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            padding: 2rem;
+        }
+
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .admin-title {
+            font-size: 2rem;
+            background: linear-gradient(to right, #ff4b1f, #ff9068);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .table-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 0, 0, 0.2);
+            font-weight: 600;
+            color: #ff9068;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background: rgba(255, 165, 0, 0.2);
+            color: orange;
+            border: 1px solid orange;
+        }
+
+        .status-active {
+            background: rgba(0, 255, 0, 0.2);
+            color: #0f0;
+            border: 1px solid #0f0;
+        }
+
+        .btn-action {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: linear-gradient(to right, #11998e, #38ef7d);
+            color: white;
+        }
+
+        .btn-approve:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-view {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-view:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .flash-messages {
+            margin-bottom: 1rem;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
+        .alert-success {
+            background: rgba(0, 255, 0, 0.2);
+            border: 1px solid rgba(0, 255, 0, 0.3);
+            color: #ccffcc;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="admin-container">
+        <div class="admin-header">
+            <h1 class="admin-title">Panel de Administración</h1>
+            <a href="{{ url_for('index') }}" class="btn-action btn-view">Volver al Sitio</a>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="flash-messages">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="table-card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nombre</th>
+                        <th>Email</th>
+                        <th>Estado</th>
+                        <th>Comprobante</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr>
+                        <td>{{ user.id }}</td>
+                        <td>{{ user.name }}</td>
+                        <td>{{ user.email }}</td>
+                        <td>
+                            {% if user.is_enabled %}
+                            <span class="status-badge status-active">Habilitado</span>
+                            {% else %}
+                            <span class="status-badge status-pending">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.payment_proof %}
+                            <a href="{{ url_for('uploaded_file', filename=user.payment_proof) }}" target="_blank"
+                                class="btn-action btn-view">
+                                <i class="fas fa-image"></i> Ver Imagen
+                            </a>
+                            {% else %}
+                            <span style="color: #aaa;">Sin archivo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if not user.is_enabled %}
+                            <form action="{{ url_for('approve_user', user_id=user.id) }}" method="POST"
+                                style="display: inline;">
+                                <button type="submit" class="btn-action btn-approve">
+                                    <i class="fas fa-check"></i> Aprobar
+                                </button>
+                            </form>
+                            {% else %}
+                            <span style="color: #aaa;"><i class="fas fa-check-double"></i> Listo</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+
+</html>

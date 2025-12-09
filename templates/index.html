@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     <!-- Styles -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -36,10 +36,23 @@
                 <li><a href="#presupuesto" class="nav-link">Presupuesto</a></li>
                 <li><a href="#pagos" class="nav-link">Pagos</a></li>
                 <li><a href="#mapa" class="nav-link">Mapa</a></li>
+
+                {% if current_user.is_authenticated and current_user.is_enabled %}
                 <li><a href="#invitados" class="nav-link">Invitados</a></li>
                 <li><a href="#recuerdos" class="nav-link">Recuerdos</a></li>
                 <li><a href="#eventos" class="nav-link">Eventos</a></li>
+                {% endif %}
+
                 <li><button id="theme-toggle" class="theme-btn"><i class="fas fa-moon"></i></button></li>
+
+                {% if current_user.is_authenticated %}
+                <li class="user-menu">
+                    <span style="color: var(--primary-color); margin-right: 10px;">Hola, {{ current_user.name }}</span>
+                    <a href="{{ url_for('logout') }}" class="nav-link" style="color: #ff6b6b;">Salir</a>
+                </li>
+                {% else %}
+                <li><a href="{{ url_for('login') }}" class="nav-link highlight-link">Iniciar Sesión</a></li>
+                {% endif %}
             </ul>
         </div>
     </nav>
@@ -49,7 +62,20 @@
         <div class="glass-card hero-content">
             <h1>Bienvenidos al <br><span class="gradient-text">Dev Barbecue</span></h1>
             <p>Conocimiento, carne, futbol y algo más.</p>
+
+            {% if current_user.is_authenticated %}
+            {% if current_user.is_enabled %}
             <a href="#eventos" class="cta-button">Ver Próximos Eventos</a>
+            {% else %}
+            <div class="alert-box"
+                style="background: rgba(255, 165, 0, 0.2); padding: 15px; border-radius: 10px; border: 1px solid orange; margin-top: 20px;">
+                <p style="margin: 0; color: #ffd700;"><i class="fas fa-clock"></i> Tu cuenta está en revisión. Pronto
+                    podrás ver todo el contenido.</p>
+            </div>
+            {% endif %}
+            {% else %}
+            <a href="{{ url_for('register') }}" class="cta-button">Regístrate para Asistir</a>
+            {% endif %}
         </div>
         <div class="hero-bg-shapes">
             <div class="shape shape-1"></div>
@@ -166,7 +192,8 @@
                 </p>
             </div>
             <div class="payment-qr">
-                <img src="assets/qr_nequi.png" alt="Código QR Nequi" class="qr-image">
+                <img src="{{ url_for('static', filename='assets/qr_nequi.png') }}" alt="Código QR Nequi"
+                    class="qr-image">
             </div>
         </div>
     </section>
@@ -186,6 +213,7 @@
         </div>
     </section>
 
+    {% if current_user.is_authenticated and current_user.is_enabled %}
     <!-- Guests Section -->
     <section id="invitados" class="section-container">
         <h2 class="section-title">Invitados Confirmados</h2>
@@ -232,19 +260,19 @@
             <div class="slider-container">
                 <div class="slider-track">
                     <div class="slide">
-                        <img src="assets/Grupo.png" Recuerdo 1">
+                        <img src="{{ url_for('static', filename='assets/Grupo.png') }}" alt="Recuerdo 1">
                     </div>
                     <div class="slide">
-                        <img src="assets/Santiago_Diego.png" alt="Recuerdo 2">
+                        <img src="{{ url_for('static', filename='assets/Santiago_Diego.png') }}" alt="Recuerdo 2">
                     </div>
                     <div class="slide">
-                        <img src="assets/Alien.png" alt="Recuerdo 3">
+                        <img src="{{ url_for('static', filename='assets/Alien.png') }}" alt="Recuerdo 3">
                     </div>
                     <div class="slide">
-                        <img src="assets/RafaOk.png" alt="Recuerdo 4">
+                        <img src="{{ url_for('static', filename='assets/RafaOk.png') }}" alt="Recuerdo 4">
                     </div>
                     <div class="slide">
-                        <img src="assets/Santiagoxxx.jpeg" alt="Recuerdo 5">
+                        <img src="{{ url_for('static', filename='assets/Santiagoxxx.jpeg') }}" alt="Recuerdo 5">
                     </div>
                 </div>
             </div>
@@ -307,6 +335,7 @@
             </div>
         </div>
     </section>
+    {% endif %}
 
     <!-- Quotes Section -->
     <section id="frases" class="section-container">
@@ -359,7 +388,7 @@
                         </a>
                     </p>
                 </div>
-                <p>📧 <a href="matrix.html"
+                <p>📧 <a href="{{ url_for('matrix') }}"
                         style="text-decoration: none; color: inherit; cursor: text;">contacto@devbarbecue.com</a></p>
             </div>
             <div class="footer-social">
@@ -374,7 +403,7 @@
         </div>
     </footer>
 
-    <script src="js/script.js"></script>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 </body>
 
 </html>

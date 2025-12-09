@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Dev Barbecue</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .auth-container {
+            width: 100%;
+            max-width: 500px;
+            /* Slightly wider for file input */
+            text-align: left;
+            position: relative;
+            z-index: 10;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-submit {
+            width: 100%;
+            cursor: pointer;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .auth-links a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .auth-links a:hover {
+            text-decoration: underline;
+        }
+
+        .alert {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .alert-error {
+            background: rgba(255, 69, 0, 0.2);
+            border: 1px solid var(--primary-color);
+            color: var(--text-color);
+        }
+
+        /* File Input Styling */
+        .file-upload-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100px;
+            border: 2px dashed var(--glass-border);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            transition: all 0.3s;
+            cursor: pointer;
+            overflow: hidden;
+        }
+
+        .file-upload-wrapper:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--primary-color);
+        }
+
+        .file-upload-wrapper input[type="file"] {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .file-upload-content {
+            text-align: center;
+            color: var(--text-color);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .file-upload-content i {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--secondary-color);
+        }
+
+        .file-name-display {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Navigation (Simplified) -->
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">Dev Barbecue <span class="highlight">ETITC</span></a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="nav-link">Volver al Inicio</a></li>
+                <li><button id="theme-toggle" class="theme-btn"><i class="fas fa-moon"></i></button></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="hero-section" style="min-height: calc(100vh - 80px);">
+        <div class="glass-card auth-container">
+            <h2 class="section-title" style="margin-bottom: 1.5rem; font-size: 2rem;">Registro</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="name">Nombre Completo</label>
+                    <input type="text" id="name" name="name" class="form-control" placeholder="Tu nombre" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="ejemplo@correo.com"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Contraseña</label>
+                    <input type="password" id="password" name="password" class="form-control" placeholder="••••••••"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="payment_proof">Comprobante de Pago</label>
+                    <div class="file-upload-wrapper">
+                        <input type="file" id="payment_proof" name="payment_proof" accept="image/*" required
+                            onchange="updateFileName(this)">
+                        <div class="file-upload-content">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Haz clic o arrastra tu imagen aquí</p>
+                        </div>
+                    </div>
+                    <div id="file-name" class="file-name-display"></div>
+                </div>
+                <button type="submit" class="cta-button btn-submit">Registrarse</button>
+            </form>
+
+            <div class="auth-links">
+                <p>¿Ya tienes cuenta? <a href="{{ url_for('login') }}">Inicia sesión</a></p>
+            </div>
+        </div>
+
+        <!-- Background Shapes -->
+        <div class="hero-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+        </div>
+    </section>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function updateFileName(input) {
+            const fileNameDisplay = document.getElementById('file-name');
+            if (input.files && input.files[0]) {
+                fileNameDisplay.textContent = 'Archivo seleccionado: ' + input.files[0].name;
+                // Optional: Show preview? No, keep it simple for now.
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,177 @@
+import os
+from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
+from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from models import db, User
+
+app = Flask(__name__)
+app.config['SECRET_KEY'] = 'dev_secret_key_change_in_production'
+# Use absolute path for DB to avoid issues with relative paths in Docker
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////app/instance/barbecue.db'
+app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+
+# Ensure upload and instance directories exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
+
+db.init_app(app)
+
+# Create tables if they don't exist
+with app.app_context():
+    db.create_all()
+
+login_manager = LoginManager()
+login_manager.login_view = 'login'
+login_manager.init_app(app)
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
+
+# --- Admin Helper ---
+from functools import wraps
+from flask import abort
+
+def admin_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
+# --- CLI Commands ---
+@app.cli.command("create-admin")
+def create_admin():
+    """Creates an admin user."""
+    email = input("Enter admin email: ")
+    password = input("Enter admin password: ")
+    name = input("Enter admin name: ")
+    
+    user = User.query.filter_by(email=email).first()
+    if user:
+        print("User already exists. Updating role to admin.")
+        user.role = 'admin'
+        user.is_enabled = True
+    else:
+        user = User(
+            email=email,
+            name=name,
+            password_hash=generate_password_hash(password, method='pbkdf2:sha256'),
+            role='admin',
+            is_enabled=True
+        )
+        db.session.add(user)
+    
+    db.session.commit()
+    print(f"Admin user {email} created/updated successfully.")
+
+# --- Routes ---
+
+@app.route('/')
+def index():
+    return render_template('index.html', user=current_user)
+
+@app.route('/admin')
+@login_required
+@admin_required
+def admin_panel():
+    users = User.query.all()
+    return render_template('admin.html', users=users)
+
+@app.route('/admin/approve/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_enabled = True
+    db.session.commit()
+    flash(f'Usuario {user.name} habilitado exitosamente.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/matrix')
+@login_required
+def matrix():
+    if not current_user.is_enabled:
+        flash('Tu cuenta aún no ha sido habilitada. Verifica tu pago.', 'warning')
+        return redirect(url_for('index'))
+    return render_template('matrix.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            return redirect(url_for('index'))
+        else:
+            flash('Email o contraseña incorrectos.', 'error')
+            
+    return render_template('login.html')
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password = request.form.get('password')
+        
+        # Handle file upload
+        if 'payment_proof' not in request.files:
+            flash('Debes subir un comprobante de pago.', 'error')
+            return redirect(request.url)
+            
+        file = request.files['payment_proof']
+        if file.filename == '':
+            flash('No seleccionaste ningún archivo.', 'error')
+            return redirect(request.url)
+            
+        if file:
+            filename = secure_filename(file.filename)
+            # Save with unique name to prevent overwrite
+            unique_filename = f"{email}_{filename}"
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], unique_filename))
+            
+            user = User.query.filter_by(email=email).first()
+            if user:
+                flash('El email ya está registrado.', 'error')
+                return redirect(url_for('login'))
+            
+            new_user = User(
+                email=email,
+                name=name,
+                password_hash=generate_password_hash(password, method='pbkdf2:sha256'),
+                payment_proof=unique_filename,
+                is_enabled=False # Default to disabled
+            )
+            
+            db.session.add(new_user)
+            db.session.commit()
+            
+            flash('Registro exitoso. Tu cuenta será habilitada tras verificar el pago.', 'success')
+            return redirect(url_for('login'))
+            
+    return render_template('register.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+# Route to serve uploaded files (admin only ideally, but for now...)
+@app.route('/uploads/<filename>')
+@login_required
+def uploaded_file(filename):
+    # In a real app, check if user is admin or the owner of the file
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
+    app.run(debug=True, port=5000)

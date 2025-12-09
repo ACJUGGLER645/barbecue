@@ -109,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Slider Logic ---
     const track = document.querySelector('.slider-track');
+    if (!track) return; // Exit if slider is not present (e.g. user not logged in)
     const slides = Array.from(track.children);
     const nextButton = document.querySelector('.next-btn');
     const prevButton = document.querySelector('.prev-btn');
