@@ -1,19 +1,24 @@
 import os
 from flask import Flask, render_template, redirect, url_for, request, flash, send_from_directory
+from dotenv import load_dotenv
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_mail import Mail, Message
 from models import db, User
 
+load_dotenv()
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key_change_in_production')
-# Use absolute path for DB to avoid issues with relative paths in Docker
-# Allow database URI to be overridden by environment variable (e.g., for Postgres)
-db_url = os.environ.get('DATABASE_URL', 'sqlite:////app/instance/barbecue.db')
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+# Use absolute path for DB to avoid issues with relative paths
+basedir = os.path.abspath(os.path.dirname(__file__))
+db_path = os.path.join(basedir, 'barbecue.db')
+# app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{db_path}')
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
+
+if app.config['SQLALCHEMY_DATABASE_URI'].startswith("postgres://"):
+    app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'].replace("postgres://", "postgresql://", 1)
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
 
@@ -56,6 +61,15 @@ Si crees que esto es un error, por favor contacta con soporte.
 
 Atentamente,
 Equipo Dev Barbecue ETITC"""
+    elif action == 'registered':
+        subject = "Registro Recibido - Dev Barbecue"
+        body = f"""Hola {user.name},
+
+Hemos recibido tu solicitud de registro y tu comprobante de pago.
+Un administrador revisará la información pronto. Te llegará otro correo cuando tu cuenta sea aprobada.
+
+Gracias por registrarte.
+Equipo Dev Barbecue ETITC"""
 
     try:
         msg = Message(subject, recipients=[user.email], body=body)
@@ -71,8 +85,8 @@ os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
 db.init_app(app)
 
 # Create tables if they don't exist
-with app.app_context():
-    db.create_all()
+# Tables will be created manually or in main block
+
 
 login_manager = LoginManager()
 login_manager.login_view = 'login'
@@ -162,6 +176,31 @@ def disable_user(user_id):
     send_status_email(user, 'disabled')
     
     flash(f'Usuario {user.name} deshabilitado exitosamente y notificado por correo.', 'success')
+    flash(f'Usuario {user.name} deshabilitado exitosamente y notificado por correo.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/delete/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('No puedes eliminar tu propia cuenta.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    # Optional: Delete proof file if exists
+    if user.payment_proof:
+        try:
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], user.payment_proof)
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        except Exception as e:
+            print(f"Error deleting file: {e}")
+
+    db.session.delete(user)
+    db.session.commit()
+    
+    flash(f'Usuario {user.name} eliminado permanentemente.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/admin/change_role/<int:user_id>', methods=['POST'])
@@ -244,6 +283,9 @@ def register():
             
             db.session.add(new_user)
             db.session.commit()
+            
+            # Send welcome/verification pending email
+            send_status_email(new_user, 'registered')
             
             flash('Registro exitoso. Tu cuenta será habilitada tras verificar el pago.', 'success')
             return redirect(url_for('login'))

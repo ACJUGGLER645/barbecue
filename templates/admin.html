@@ -399,6 +399,14 @@
                                                 </button>
                                             </form>
                                             {% endif %}
+                                            <form action="{{ url_for('delete_user', user_id=user.id) }}" method="POST"
+                                                style="display: inline;" onclick="event.stopPropagation();"
+                                                onsubmit="return confirm('¿Estás seguro de ELIMINAR a {{ user.name }}? Esta acción no se puede deshacer.');">
+                                                <button type="submit" class="btn-action btn-disable"
+                                                    style="background: rgba(255, 0, 0, 0.4); border-color: red; color: white;">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
                                         </div>
                                     </td>
                                 </tr>
