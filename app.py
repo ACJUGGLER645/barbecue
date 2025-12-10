@@ -3,14 +3,66 @@ from flask import Flask, render_template, redirect, url_for, request, flash, sen
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_mail import Mail, Message
 from models import db, User
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'dev_secret_key_change_in_production'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key_change_in_production')
 # Use absolute path for DB to avoid issues with relative paths in Docker
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:////app/instance/barbecue.db'
+# Allow database URI to be overridden by environment variable (e.g., for Postgres)
+db_url = os.environ.get('DATABASE_URL', 'sqlite:////app/instance/barbecue.db')
+if db_url.startswith("postgres://"):
+    db_url = db_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max upload
+
+# --- Mail Config ---
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True') == 'True'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER')
+
+mail = Mail(app)
+
+def send_status_email(user, action):
+    """Sends an email notification to the user about their account status."""
+    if not app.config['MAIL_USERNAME']:
+        print("Mail not configured, skipping email.")
+        return
+
+    subject = ""
+    body = ""
+    
+    if action == 'approved':
+        subject = "¡Tu cuenta en Dev Barbecue ha sido APROBADA!"
+        body = f"""Hola {user.name},
+        
+Nos complace informarte que tu pago ha sido verificado y tu cuenta ha sido habilitada.
+Ya puedes iniciar sesión y acceder a todo el contenido, incluyendo la ubicación secreta de los eventos.
+
+Ingresa aquí: {url_for('login', _external=True)}
+
+¡Te esperamos!
+Equipo Dev Barbecue ETITC"""
+    elif action == 'disabled':
+        subject = "AVISO: Tu cuenta en Dev Barbecue ha sido deshabilitada"
+        body = f"""Hola {user.name},
+        
+Te informamos que tu cuenta ha sido deshabilitada temporalmente por un administrador.
+Si crees que esto es un error, por favor contacta con soporte.
+
+Atentamente,
+Equipo Dev Barbecue ETITC"""
+
+    try:
+        msg = Message(subject, recipients=[user.email], body=body)
+        mail.send(msg)
+        print(f"Email sent to {user.email}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
 # Ensure upload and instance directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
@@ -88,7 +140,47 @@ def approve_user(user_id):
     user = User.query.get_or_404(user_id)
     user.is_enabled = True
     db.session.commit()
-    flash(f'Usuario {user.name} habilitado exitosamente.', 'success')
+    
+    # Send email
+    send_status_email(user, 'approved')
+    
+    flash(f'Usuario {user.name} habilitado exitosamente y notificado por correo.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/disable/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def disable_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('No puedes deshabilitar tu propia cuenta.', 'error')
+        return redirect(url_for('admin_panel'))
+    user.is_enabled = False
+    db.session.commit()
+    
+    # Send email
+    send_status_email(user, 'disabled')
+    
+    flash(f'Usuario {user.name} deshabilitado exitosamente y notificado por correo.', 'success')
+    return redirect(url_for('admin_panel'))
+
+@app.route('/admin/change_role/<int:user_id>', methods=['POST'])
+@login_required
+@admin_required
+def change_role(user_id):
+    user = User.query.get_or_404(user_id)
+    if user.id == current_user.id:
+        flash('No puedes cambiar tu propio rol por seguridad.', 'error')
+        return redirect(url_for('admin_panel'))
+    
+    new_role = request.form.get('role')
+    if new_role not in ['admin', 'user']:
+        flash('Rol inválido.', 'error')
+        return redirect(url_for('admin_panel'))
+        
+    user.role = new_role
+    db.session.commit()
+    flash(f'Rol de {user.name} actualizado a {new_role}.', 'success')
     return redirect(url_for('admin_panel'))
 
 @app.route('/matrix')

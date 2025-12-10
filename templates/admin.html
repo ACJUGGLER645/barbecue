@@ -5,20 +5,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Administración - Dev Barbecue</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            font-family: 'Inter', sans-serif;
-            color: #fff;
-            padding: 2rem;
-        }
 
+    <style>
         .admin-container {
-            max-width: 1200px;
-            margin: 0 auto;
+            width: 100%;
+            max-width: 1400px;
+            /* Increased width for split view */
+            text-align: left;
+            position: relative;
+            z-index: 10;
         }
 
         .admin-header {
@@ -26,182 +30,452 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 1rem;
         }
 
         .admin-title {
-            font-size: 2rem;
-            background: linear-gradient(to right, #ff4b1f, #ff9068);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 2.5rem;
+            margin: 0;
         }
 
-        .table-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
+        /* Layout for Split View */
+        .admin-layout {
+            display: flex;
+            gap: 2rem;
+            align-items: flex-start;
+            transition: all 0.3s ease;
+        }
+
+        .list-section {
+            flex: 1;
+            transition: all 0.3s ease;
+            min-width: 0;
+            /* Prevent flex overflow */
+        }
+
+        .preview-section {
+            width: 0;
+            opacity: 0;
             overflow: hidden;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform: translateX(20px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-section.active {
+            width: 400px;
+            opacity: 1;
+            padding: 1.5rem;
+            transform: translateX(0);
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--glass-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .preview-header h3 {
+            margin: 0;
+            color: var(--primary-color);
+        }
+
+        .preview-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+            min-height: 300px;
+        }
+
+        .preview-content img {
+            max-width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 4px;
+        }
+
+        .btn-close-preview {
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: color 0.2s;
+        }
+
+        .btn-close-preview:hover {
+            color: #ff6b6b;
+        }
+
+        /* Table Styles */
+        .table-responsive {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            white-space: nowrap;
         }
 
         th,
         td {
-            padding: 15px;
+            padding: 1rem;
             text-align: left;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--glass-border);
+            color: var(--text-color);
         }
 
         th {
             background: rgba(0, 0, 0, 0.2);
-            font-weight: 600;
-            color: #ff9068;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 1px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
         }
 
         tr:hover {
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            /* Indicate row is clickable */
         }
 
+        tr.selected-row {
+            background: rgba(255, 69, 0, 0.1);
+            /* Primary color tint */
+            border-left: 4px solid var(--primary-color);
+        }
+
+        /* Status Badges */
         .status-badge {
-            padding: 5px 10px;
-            border-radius: 20px;
+            padding: 0.4rem 0.8rem;
+            border-radius: 50px;
             font-size: 0.8rem;
-            font-weight: bold;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
         }
 
         .status-pending {
-            background: rgba(255, 165, 0, 0.2);
-            color: orange;
-            border: 1px solid orange;
+            background: rgba(255, 165, 0, 0.15);
+            color: #ffa500;
+            border: 1px solid rgba(255, 165, 0, 0.3);
         }
 
         .status-active {
-            background: rgba(0, 255, 0, 0.2);
-            color: #0f0;
-            border: 1px solid #0f0;
+            background: rgba(46, 204, 113, 0.15);
+            color: #2ecc71;
+            border: 1px solid rgba(46, 204, 113, 0.3);
         }
 
+        /* Action Buttons */
         .btn-action {
-            padding: 8px 15px;
-            border: none;
-            border-radius: 5px;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-
-        .btn-approve {
-            background: linear-gradient(to right, #11998e, #38ef7d);
-            color: white;
-        }
-
-        .btn-approve:hover {
-            transform: scale(1.05);
+            border: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .btn-view {
             background: rgba(255, 255, 255, 0.1);
-            color: white;
-            text-decoration: none;
-            display: inline-block;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
         }
 
         .btn-view:hover {
             background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
         }
 
-        .flash-messages {
-            margin-bottom: 1rem;
+        .btn-approve {
+            background: linear-gradient(45deg, #11998e, #38ef7d);
+            color: white;
+            box-shadow: 0 4px 15px rgba(56, 239, 125, 0.3);
+        }
+
+        .btn-approve:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(56, 239, 125, 0.4);
+        }
+
+        .btn-disable {
+            background: rgba(255, 69, 0, 0.2);
+            color: #ff6b6b;
+            border: 1px solid #ff6b6b;
+        }
+
+        .btn-disable:hover {
+            background: rgba(255, 69, 0, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .role-select {
+            padding: 5px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-color);
+            border: 1px solid var(--glass-border);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .role-select:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .role-select option {
+            background: #222;
+            /* Fallback for dark backgrounds */
+            color: #fff;
         }
 
         .alert {
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 10px;
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+            font-weight: 600;
         }
 
         .alert-success {
-            background: rgba(0, 255, 0, 0.2);
-            border: 1px solid rgba(0, 255, 0, 0.3);
-            color: #ccffcc;
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid #2ecc71;
+            color: var(--text-color);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 900px) {
+            .admin-layout {
+                flex-direction: column;
+            }
+
+            .preview-section.active {
+                width: 100%;
+                margin-top: 2rem;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="admin-container">
-        <div class="admin-header">
-            <h1 class="admin-title">Panel de Administración</h1>
-            <a href="{{ url_for('index') }}" class="btn-action btn-view">Volver al Sitio</a>
+
+    <!-- Navigation -->
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('index') }}" class="logo">Dev Barbecue <span class="highlight">ETITC</span></a>
+            <ul class="nav-links">
+                <li><a href="{{ url_for('index') }}" class="nav-link">Volver al Inicio</a></li>
+                <li><button id="theme-toggle" class="theme-btn"><i class="fas fa-moon"></i></button></li>
+                <li class="user-menu">
+                    <a href="{{ url_for('logout') }}" class="nav-link" style="color: #ff6b6b;">Salir</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <section class="hero-section" style="min-height: calc(100vh - 80px); align-items: flex-start; padding-top: 4rem;">
+        <div class="glass-card admin-container">
+
+            <div class="admin-header">
+                <h1 class="section-title admin-title">Panel de Administración</h1>
+                <div style="font-size: 0.9rem; opacity: 0.7;">
+                    <i class="fas fa-users"></i> Total Usuarios: {{ users|length }}
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="admin-layout">
+                <!-- List Section -->
+                <div class="list-section">
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th>Email</th>
+                                    <th>Estado</th>
+                                    <th>Comprobante</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr id="row-{{ user.id }}" class="user-row" data-id="{{ user.id }}"
+                                    data-name="{{ user.name }}"
+                                    data-img="{{ url_for('uploaded_file', filename=user.payment_proof) if user.payment_proof else '' }}"
+                                    onclick="handleRowClick(this)">
+                                    <td>#{{ user.id }}</td>
+                                    <td>
+                                        <div style="font-weight: 600;">{{ user.name }}</div>
+                                    </td>
+                                    <td>
+                                        <form action="{{ url_for('change_role', user_id=user.id) }}" method="POST"
+                                            onclick="event.stopPropagation();">
+                                            <select name="role" onchange="this.form.submit()" class="role-select">
+                                                <option value="user" {% if user.role=='user' %}selected{% endif %}>
+                                                    Usuario</option>
+                                                <option value="admin" {% if user.role=='admin' %}selected{% endif %}>
+                                                    Admin</option>
+                                            </select>
+                                        </form>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>
+                                        {% if user.is_enabled %}
+                                        <span class="status-badge status-active">
+                                            <i class="fas fa-check-circle"></i> Activo
+                                        </span>
+                                        {% else %}
+                                        <span class="status-badge status-pending">
+                                            <i class="fas fa-clock"></i> Pendiente
+                                        </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.payment_proof %}
+                                        <button class="btn-action btn-view"
+                                            onclick="event.stopPropagation(); handleRowClick(document.getElementById('row-{{ user.id }}'))">
+                                            <i class="fas fa-eye"></i> Ver
+                                        </button>
+                                        {% else %}
+                                        <span style="opacity: 0.5;">—</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            {% if not user.is_enabled %}
+                                            <form action="{{ url_for('approve_user', user_id=user.id) }}" method="POST"
+                                                style="display: inline;" onclick="event.stopPropagation();">
+                                                <button type="submit" class="btn-action btn-approve">
+                                                    <i class="fas fa-check"></i> Aprobar
+                                                </button>
+                                            </form>
+                                            {% else %}
+                                            <form action="{{ url_for('disable_user', user_id=user.id) }}" method="POST"
+                                                style="display: inline;" onclick="event.stopPropagation();">
+                                                <button type="submit" class="btn-action btn-disable">
+                                                    <i class="fas fa-ban"></i> Deshab.
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Preview Section -->
+                <div class="preview-section" id="preview-pane">
+                    <div class="preview-header">
+                        <h3 id="preview-title">Comprobante</h3>
+                        <button class="btn-close-preview" onclick="closePreview()"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="preview-content">
+                        <img id="preview-img" src="" alt="Comprobante de pago">
+                        <div id="preview-empty" style="display: none; text-align: center; padding: 2rem;">
+                            <i class="fas fa-image" style="font-size: 3rem; opacity: 0.3; margin-bottom: 1rem;"></i>
+                            <p>Sin comprobante</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        <div class="flash-messages">
-            {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">{{ message }}</div>
-            {% endfor %}
+        <!-- Background Shapes -->
+        <div class="hero-bg-shapes">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
         </div>
-        {% endif %}
-        {% endwith %}
+    </section>
 
-        <div class="table-card">
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Nombre</th>
-                        <th>Email</th>
-                        <th>Estado</th>
-                        <th>Comprobante</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.id }}</td>
-                        <td>{{ user.name }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>
-                            {% if user.is_enabled %}
-                            <span class="status-badge status-active">Habilitado</span>
-                            {% else %}
-                            <span class="status-badge status-pending">Pendiente</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user.payment_proof %}
-                            <a href="{{ url_for('uploaded_file', filename=user.payment_proof) }}" target="_blank"
-                                class="btn-action btn-view">
-                                <i class="fas fa-image"></i> Ver Imagen
-                            </a>
-                            {% else %}
-                            <span style="color: #aaa;">Sin archivo</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if not user.is_enabled %}
-                            <form action="{{ url_for('approve_user', user_id=user.id) }}" method="POST"
-                                style="display: inline;">
-                                <button type="submit" class="btn-action btn-approve">
-                                    <i class="fas fa-check"></i> Aprobar
-                                </button>
-                            </form>
-                            {% else %}
-                            <span style="color: #aaa;"><i class="fas fa-check-double"></i> Listo</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <script>
+        function handleRowClick(rowElement) {
+            const userId = rowElement.getAttribute('data-id');
+            const imageUrl = rowElement.getAttribute('data-img');
+            const userName = rowElement.getAttribute('data-name');
+            togglePreview(userId, imageUrl, userName);
+        }
+
+        function togglePreview(userId, imageUrl, userName) {
+            const previewPane = document.getElementById('preview-pane');
+            const previewImg = document.getElementById('preview-img');
+            const previewEmpty = document.getElementById('preview-empty');
+            const previewTitle = document.getElementById('preview-title');
+
+            // Highlight row
+            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected-row'));
+            const row = document.getElementById('row-' + userId);
+            if (row) row.classList.add('selected-row');
+
+            // Update content
+            previewTitle.textContent = 'Comprobante: ' + userName;
+
+            if (imageUrl) {
+                previewImg.src = imageUrl;
+                previewImg.style.display = 'block';
+                previewEmpty.style.display = 'none';
+            } else {
+                previewImg.style.display = 'none';
+                previewEmpty.style.display = 'block';
+            }
+
+            // Show pane
+            previewPane.classList.add('active');
+        }
+
+        function closePreview() {
+            const previewPane = document.getElementById('preview-pane');
+            previewPane.classList.remove('active');
+
+            // Remove highlight
+            document.querySelectorAll('tr').forEach(tr => tr.classList.remove('selected-row'));
+        }
+    </script>
 </body>
 
 </html>
