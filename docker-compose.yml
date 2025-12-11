@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    container_name: barbecue-backend
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./backend/instance:/app/instance
+      - ./backend/uploads:/app/uploads
+    environment:
+      - SECRET_KEY=${SECRET_KEY:-dev_secret_key_change_in_production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-dev_jwt_secret}
+      - MAIL_SERVER=${MAIL_SERVER:-smtp.gmail.com}
+      - MAIL_PORT=${MAIL_PORT:-587}
+      - MAIL_USE_TLS=${MAIL_USE_TLS:-True}
+      - MAIL_USERNAME=${MAIL_USERNAME}
+      - MAIL_PASSWORD=${MAIL_PASSWORD}
+      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      - CORS_ORIGINS=http://localhost:5173,http://localhost:3000,http://localhost:80
+    networks:
+      - barbecue-network
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: barbecue-frontend
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://localhost:5000/api
+    depends_on:
+      - backend
+    networks:
+      - barbecue-network
+    restart: unless-stopped
+
+networks:
+  barbecue-network:
+    driver: bridge
+
+volumes:
+  db-data:
+  uploads-data:

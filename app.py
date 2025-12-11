@@ -13,7 +13,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev_secret_key_change_in_production')
 # Use absolute path for DB to avoid issues with relative paths
 basedir = os.path.abspath(os.path.dirname(__file__))
-db_path = os.path.join(basedir, 'barbecue.db')
+db_path = os.path.join(basedir, 'instance', 'barbecue.db')
 # app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite:///{db_path}')
 app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{db_path}'
 
@@ -77,7 +77,39 @@ Equipo Dev Barbecue ETITC"""
         print(f"Email sent to {user.email}")
     except Exception as e:
         print(f"Error sending email: {e}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
+def notify_admins_new_user(new_user):
+    """Sends an email to all admins about a new user registration."""
+    if not app.config['MAIL_USERNAME']:
+        return
+
+    admins = User.query.filter_by(role='admin').all()
+    admin_emails = [admin.email for admin in admins]
+    
+    if not admin_emails:
+        return
+
+    subject = f"Nuevo Registro: {new_user.name}"
+    body = f"""Hola Admin,
+
+Un nuevo usuario se ha registrado y espera aprobación:
+
+Nombre: {new_user.name}
+Email: {new_user.email}
+
+Por favor ingresa al panel de administración para verificar el comprobante de pago y aprobar la cuenta.
+
+Panel: {url_for('admin_panel', _external=True)}
+    """
+
+    try:
+        msg = Message(subject, recipients=admin_emails, body=body)
+        mail.send(msg)
+        print(f"Notification sent to admins: {admin_emails}")
+    except Exception as e:
+        print(f"Error sending admin notification: {e}")
 # Ensure upload and instance directories exist
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.root_path, 'instance'), exist_ok=True)
@@ -286,6 +318,9 @@ def register():
             
             # Send welcome/verification pending email
             send_status_email(new_user, 'registered')
+            
+            # Notify admins
+            notify_admins_new_user(new_user)
             
             flash('Registro exitoso. Tu cuenta será habilitada tras verificar el pago.', 'success')
             return redirect(url_for('login'))
